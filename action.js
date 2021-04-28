@@ -4,7 +4,7 @@ const path = require('path')
 const artifact = require('././.action/artifact')
 const fs = require('fs')
 
-const scxVersion = '1.0.5'
+const scxVersion = 'v1.5.0'
 const outputPath = '.build/xcframework-zipfile.url'
 
 core.setCommandEcho(true)
@@ -21,7 +21,7 @@ async function run () {
         await installUsingBrewIfRequired("mint")
 
         // install ourselves if not installed
-        await installUsingMintIfRequired('swift-create-xcframework', 'unsignedapps/swift-create-xcframework')
+        await installUsingMintIfRequired('swift-create-xcframework', 'nicoelayda/swift-create-xcframework')
 
         // put together our options
         var options = [ '--zip', '--github-action' ]
@@ -93,8 +93,8 @@ async function installUsingMintIfRequired (command, package) {
         core.info(command + " is already installed")
 
     } else {
-        core.info("Installing " + package)
-        await exec.exec('mint', [ 'install', 'unsignedapps/swift-create-xcframework@' + scxVersion ])
+        core.info("Installing " + package + " " + scxVersion)
+        await exec.exec('mint', [ 'install', 'nicoelayda/swift-create-xcframework@' + scxVersion ])
     }
 }
 
