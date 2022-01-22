@@ -60,7 +60,7 @@ async function run () {
                 })
         }
 
-        await exec.exec('swift-create-xcframework', options)
+        await exec.exec('mint', ['run', 'swift-create-xcframework', ...options])
 
         let client = artifact.create()
         let files = fs.readFileSync(outputPath, { encoding: 'utf8' })
