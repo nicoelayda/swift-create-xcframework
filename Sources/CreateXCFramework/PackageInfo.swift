@@ -27,6 +27,10 @@ struct PackageInfo {
             .absoluteURL
     }
 
+    var hasDistributionBuildXcconfig: Bool {
+        self.overridesXcconfig != nil || self.options.stackEvolution == false
+    }
+
     var distributionBuildXcconfig: Foundation.URL {
         return self.projectBuildDirectory
             .appendingPathComponent("Distribution.xcconfig")
@@ -70,17 +74,35 @@ struct PackageInfo {
 
         self.toolchain = try UserToolchain(destination: try .hostDestination())
 
+        #if swift(>=5.5)
+        let resources = try UserManifestResources(swiftCompiler: self.toolchain.swiftCompiler, swiftCompilerFlags: [])
+        #else
         let resources = try UserManifestResources(swiftCompiler: self.toolchain.swiftCompiler)
+        #endif
         let loader = ManifestLoader(manifestResources: resources)
         self.workspace = Workspace.create(forRootPackage: root, manifestLoader: loader)
-
+        
+        #if swift(>=5.5)
+        self.graph = try self.workspace.loadPackageGraph(rootPath: root, diagnostics: self.diagnostics)
+        let swiftCompiler = toolchain.swiftCompiler
+        self.manifest = try tsc_await {
+            ManifestLoader.loadRootManifest(
+                at: root,
+                swiftCompiler: swiftCompiler,
+                swiftCompilerFlags: [],
+                identityResolver: DefaultIdentityResolver(),
+                on: DispatchQueue.global(qos: .background),
+                completion: $0
+            )
+        }
+        #else
         self.graph = self.workspace.loadPackageGraph(root: root, diagnostics: self.diagnostics)
-
         self.manifest = try ManifestLoader.loadManifest (
             packagePath: root,
             swiftCompiler: self.toolchain.swiftCompiler,
             packageKind: .root
         )
+        #endif
     }
 
 
@@ -214,7 +236,7 @@ enum SupportedPlatforms {
     case packageValid (plan: [SupportedPlatform])
 }
 
-extension SupportedPlatform: Equatable, Comparable {
+extension SupportedPlatform: Comparable {
     public static func == (lhs: SupportedPlatform, rhs: SupportedPlatform) -> Bool {
         return lhs.platform == rhs.platform && lhs.version == rhs.version
     }

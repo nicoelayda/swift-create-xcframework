@@ -37,6 +37,9 @@ extension Command {
         @Option(help: "The path to a .xcconfig file that can be used to override Xcode build settings. Relative to the package path.")
         var xcconfig: String?
 
+        @Flag(help: "Enables Library Evolution for the whole build stack. Normally we apply it only to the targets listed to be built to work around issues with projects that don't support it.")
+        var stackEvolution: Bool = false
+
         @Option(help: ArgumentHelp("Arbitrary Xcode build settings that are passed directly to the `xcodebuild` invocation. Can be specified multiple times.", valueName: "NAME=VALUE"))
         var xcSetting: [BuildSetting] = []
 
@@ -46,7 +49,7 @@ extension Command {
         @Option (
             help: ArgumentHelp (
                 "A list of platforms you want to build for. Can be specified multiple times."
-                    + " Default is to build for all platforms supported in your Package.swift, or all Apple platforms if omitted",
+                    + " Default is to build for all platforms supported in your Package.swift, or all Apple platforms (except for maccatalyst platform) if omitted",
                 valueName: TargetPlatform.allCases.map({ $0.rawValue }).joined(separator: "|")
             )
         )
